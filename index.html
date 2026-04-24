@@ -39,7 +39,6 @@
         .card h3 { margin-bottom: 20px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 10px;}
         .chart-container { position: relative; height: 300px; width: 100%; }
         
-        /* Cấu hình Thanh cuộn cho danh sách CLB */
         .club-list-details { max-height: 280px; overflow-y: auto; padding-right: 15px;}
         .club-list-details::-webkit-scrollbar { width: 6px; }
         .club-list-details::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -65,8 +64,16 @@
         
         #dashboardContent { display: none; }
 
+        /* MÀN HÌNH CHÀO MỪNG ĐỂ KHỞI ĐỘNG NHẠC CHỜ */
+        #entryScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #entryScreen h1 { color: var(--primary); margin-bottom: 10px; text-transform: uppercase; font-size: 2.2rem;}
+        #entryScreen p { color: #7f8c8d; margin-bottom: 30px; font-size: 1.2rem; font-weight: 500;}
+        .btn-start { background: linear-gradient(135deg, #2C3E50, #3498db); font-size: 1.3rem; padding: 15px 35px; border-radius: 30px; border: none; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(44, 62, 80, 0.4); animation: pulse 2s infinite; transition: 0.3s;}
+        .btn-start:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(44, 62, 80, 0.6); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(44, 62, 80, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(44, 62, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(44, 62, 80, 0); } }
+
         /* THANH LOADING */
-        #loader { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 60vh; }
+        #loader { display: none; flex-direction: column; justify-content: center; align-items: center; height: 100vh; position: fixed; top: 0; left: 0; width: 100%; background: var(--bg-color); z-index: 2000;}
         #loader h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.5rem; }
         .progress-container { width: 100%; max-width: 400px; background-color: #e0e0e0; border-radius: 20px; height: 25px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); position: relative; }
         .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #27ae60, #2ecc71); border-radius: 20px; transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); background-image: linear-gradient( 45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.2) 75%, transparent 75%, transparent ); background-size: 1rem 1rem; animation: progress-stripes 1s linear infinite; }
@@ -76,24 +83,40 @@
 </head>
 <body>
 
-    <div class="topbar">
+    <audio id="bgMusic" loop>
+        <source src="nhac_cho_2.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="entryScreen">
+        <h1><i class="fas fa-chart-line"></i> Dashboard Hệ Thống PQQ</h1>
+        <p>Trung tâm Quản lý & Giám sát dữ liệu Võ Đường</p>
+        <button class="btn-start" onclick="startApp()"><i class="fas fa-power-off"></i> TRUY CẬP HỆ THỐNG</button>
+    </div>
+
+    <div id="loader">
+        <h2><i class="fas fa-cloud-download-alt"></i> Đang đồng bộ dữ liệu Dashboard...</h2>
+        <div class="progress-container"><div class="progress-bar" id="progressBar">0%</div></div>
+        <div class="progress-status" id="progressStatus">Đang kết nối tới Google Sheets...</div>
+        <p id="errorText" class="error-msg"></p>
+    </div>
+
+    <div class="topbar" id="topbarArea" style="display: none;">
         <div class="logo">PQQ <span>Dashboard</span></div>
         <div class="topbar-actions">
             <a href="https://lelevietnam99.github.io/HUONGDAN_BAOCAOTIENDO/" class="btn-progress-update" target="_blank">
                 <i class="fas fa-clipboard-check"></i> Chấm Tiến Độ
+            </a>
+            <a href="https://lelevietnam99.github.io/DANGKYTHITHANGDAI/" class="btn-progress-update" style="background: linear-gradient(135deg, #3498db, #2980b9);" target="_blank">
+                <i class="fas fa-clipboard-list"></i> Đăng ký thi thăng đai
+            </a>
+            <a href="https://lelevietnam99.github.io/CHAMTHITHANGDAI/" class="btn-progress-update" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);" target="_blank">
+                <i class="fas fa-star"></i> Chấm thi thăng đai (dành cho BHL)
             </a>
             <div class="search-box">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Tìm tên, Pháp danh, CLB...">
             </div>
         </div>
-    </div>
-
-    <div id="loader">
-        <h2><i class="fas fa-cloud-download-alt"></i> Đang đồng bộ dữ liệu...</h2>
-        <div class="progress-container"><div class="progress-bar" id="progressBar">0%</div></div>
-        <div class="progress-status" id="progressStatus">Đang kết nối tới Google Sheets...</div>
-        <p id="errorText" class="error-msg"></p>
     </div>
 
     <div class="container" id="dashboardContent">
@@ -142,15 +165,29 @@
         // ==========================================
         // DÁN LẠI LINK API CỦA BẠN VÀO ĐÂY:
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbw5h12Mzaw1lETuMP1AtB7evCRGnbpaJYUQqaXAaOkV0R9Q404mkx7XSgnnbJrbEUTcIw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwec0v7qcCGpMIr2KSSIM-Em72ipOTcf572ho90VjM_YKc0WVz9hKVE336zwdJqQXxg0A/exec";
 
         let allStudentsData = []; 
         let dataStats = {};       
         let myChart = null;       
 
-        let currentProgress = 0; let progressInterval;
+        let currentProgress = 0; 
+        let progressInterval;
         const progressBar = document.getElementById('progressBar');
         const progressStatus = document.getElementById('progressStatus');
+
+        // BẮT ĐẦU ỨNG DỤNG VÀ PHÁT NHẠC
+        function startApp() {
+            document.getElementById('entryScreen').style.display = 'none';
+            
+            // Phát nhạc nền
+            const audio = document.getElementById('bgMusic');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log("Trình duyệt chặn nhạc tự động:", e));
+            
+            document.getElementById('loader').style.display = 'flex';
+            fetchGoogleSheetsData();
+        }
 
         function startLoading() {
             progressInterval = setInterval(() => {
@@ -160,21 +197,29 @@
                     progressBar.style.width = currentProgress + "%";
                     progressBar.innerText = currentProgress + "%";
                     if(currentProgress > 30 && currentProgress < 60) progressStatus.innerText = "Đang tổng hợp các tab CLB...";
-                    if(currentProgress >= 60) progressStatus.innerText = "Đang xử lý dữ liệu võ sinh...";
+                    if(currentProgress >= 60) progressStatus.innerText = "Đang phân tích dữ liệu võ sinh...";
                 }
             }, 300);
         }
 
         function completeLoading() {
-            clearInterval(progressInterval);
             currentProgress = 100;
             progressBar.style.width = "100%";
             progressBar.innerText = "100%";
             progressStatus.innerText = "Hoàn thành! Đang hiển thị Dashboard...";
+            
             setTimeout(() => {
+                // TẮT NHẠC NỀN
+                const audio = document.getElementById('bgMusic');
+                if(audio) {
+                    audio.pause();
+                    audio.currentTime = 0; 
+                }
+                
                 document.getElementById('loader').style.display = 'none';
+                document.getElementById('topbarArea').style.display = 'flex';
                 document.getElementById('dashboardContent').style.display = 'block';
-            }, 500);
+            }, 800);
         }
 
         async function fetchGoogleSheetsData() {
@@ -184,8 +229,10 @@
                 const response = await fetch(API_URL);
                 const result = await response.json();
                 if (result.status === "success") {
-                    completeLoading();
-                    setTimeout(() => { initDashboard(result.data); }, 600);
+                    setTimeout(() => { 
+                        initDashboard(result.data); 
+                        completeLoading();
+                    }, 600);
                 } else { throw new Error(result.message); }
             } catch (error) {
                 console.error("Lỗi lấy dữ liệu:", error);
@@ -193,8 +240,6 @@
                 document.getElementById('errorText').innerText = "Lỗi kết nối: " + error.message;
             }
         }
-
-        fetchGoogleSheetsData();
 
         function initDashboard(data) {
             allStudentsData = data;
@@ -248,21 +293,17 @@
             });
         }
 
-        // ===============================================
-        // HÀM HIỂN THỊ CHI TIẾT CLB ĐÃ ĐƯỢC NÂNG CẤP
-        // ===============================================
         function showClubDetails(region) {
             const clubs = dataStats[region].clubs;
-            const totalClubs = Object.keys(clubs).length; // Đếm tổng số CLB
+            const totalClubs = Object.keys(clubs).length; 
             
-            // Cập nhật tiêu đề hiển thị RÕ RÀNG số lượng CLB
             document.getElementById('detailTitle').innerHTML = 
                 `<i class="fas fa-list"></i> ${region} <span style="font-size: 0.9rem; color: #e67e22; margin-left: 8px;">(Tổng: ${totalClubs} Đơn vị)</span>`;
             
             const container = document.getElementById('clubListContainer');
             container.innerHTML = ''; 
             
-            let stt = 1; // Biến chạy Số Thứ Tự
+            let stt = 1; 
             for (const [clubName, count] of Object.entries(clubs)) {
                 container.innerHTML += `
                     <div class="club-item">
@@ -272,7 +313,7 @@
                         </span>
                         <span class="count">${count} võ sinh</span>
                     </div>`;
-                stt++; // Tăng STT lên
+                stt++; 
             }
         }
 
