@@ -103,6 +103,12 @@
     <div class="topbar" id="topbarArea" style="display: none;">
         <div class="logo">PQQ <span>Dashboard</span></div>
         <div class="topbar-actions">
+            <a href="https://lelevietnam99.github.io/DANHSACHTHITHANGDAI_CHINHTHUC/" class="btn-progress-update" style="background: linear-gradient(135deg, #e67e22, #d35400);" target="_blank">
+                <i class="fas fa-list-check"></i> Danh Sách Thi Thăng Đai
+            </a>
+            <a href="https://lelevietnam99.github.io/QUY_TRINH_TO_CHUC_THI_THANG_DAI/" class="btn-progress-update" style="background: linear-gradient(135deg, #16a085, #138d75);" target="_blank">
+                <i class="fas fa-book"></i> Quy Trình Tổ Chức Thi
+            </a>
             <a href="https://lelevietnam99.github.io/BANGGIAMSATTIENDO/" class="btn-progress-update" style="background: linear-gradient(135deg, #16a085, #1abc9c);" target="_blank">
                 <i class="fas fa-chart-bar"></i> Bảng Giám Sát Tiến Độ
             </a>
@@ -161,6 +167,11 @@
                 </thead>
                 <tbody id="studentTableBody"></tbody>
             </table>
+            <div id="loadMoreContainer" style="text-align: center; padding: 20px; background: #fff; border-top: 1px solid var(--border);">
+                <button id="btnLoadMore" class="btn-progress-update" style="margin: 0 auto; background: linear-gradient(135deg, #e67e22, #d35400); display: none;">
+                    <i class="fas fa-chevron-down"></i> Tải thêm danh sách
+                </button>
+            </div>
         </div>
     </div>
 
@@ -173,7 +184,9 @@
         let allStudentsData = []; 
         let dataStats = {};       
         let myChart = null;       
-
+        let currentDisplayCount = 0; 
+        let currentDataToRender = []; 
+        const ITEMS_PER_PAGE = 20;
         let currentProgress = 0; 
         let progressInterval;
         const progressBar = document.getElementById('progressBar');
@@ -320,21 +333,38 @@
             }
         }
 
-        function renderTable(data) {
+        function renderTable(data, isReset = true) {
             const tbody = document.getElementById('studentTableBody');
-            tbody.innerHTML = '';
-            if(data.length === 0) {
+            const btnLoadMore = document.getElementById('btnLoadMore');
+
+            // Nếu isReset = true (khi mới load web hoặc khi gõ tìm kiếm), làm sạch bảng và đếm lại từ 0
+            if (isReset) {
+                tbody.innerHTML = '';
+                currentDisplayCount = 0;
+                currentDataToRender = data; // Lưu lại mảng dữ liệu đang cần hiển thị
+            }
+
+            // Xử lý nếu mảng trống
+            if(currentDataToRender.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Chưa có dữ liệu võ sinh nào.</td></tr>';
+                btnLoadMore.style.display = 'none';
                 return;
             }
-            data.forEach((student, index) => {
+
+            // Tính toán khoảng dữ liệu sẽ lấy thêm (vd: từ 0 -> 20, lần sau từ 20 -> 40)
+            const nextCount = Math.min(currentDisplayCount + ITEMS_PER_PAGE, currentDataToRender.length);
+            const batch = currentDataToRender.slice(currentDisplayCount, nextCount);
+
+            // Chỉ nối thêm (+=) các dòng mới vào bảng thay vì load lại toàn bộ
+            batch.forEach((student, index) => {
+                const actualIndex = currentDisplayCount + index + 1; // Cập nhật đúng số thứ tự
                 let profileHtml = student.profile ? 
                     `<a href="${student.profile}" target="_blank" class="github-link"><i class="fab fa-github"></i> Xem</a>` : 
                     `<span class="empty-link">-</span>`;
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${index + 1}</td>
+                        <td>${actualIndex}</td>
                         <td style="font-weight: bold;">${student.name}</td>
                         <td>${student.dharma}</td>
                         <td>${student.club}</td>
@@ -343,8 +373,31 @@
                         <td>${profileHtml}</td>
                     </tr>`;
             });
-        }
 
+            // Cập nhật lại mốc đếm
+            currentDisplayCount = nextCount;
+
+            // Ẩn/hiện nút "Xem thêm" dựa vào việc đã load hết dữ liệu chưa
+            if (currentDisplayCount < currentDataToRender.length) {
+                btnLoadMore.style.display = 'flex';
+            } else {
+                btnLoadMore.style.display = 'none';
+            }
+        }
+        document.getElementById('btnLoadMore').addEventListener('click', function() {
+            // isReset = false để nó nối tiếp vào bảng hiện tại
+            renderTable(currentDataToRender, false); 
+        });
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            const filtered = allStudentsData.filter(student => 
+                student.name.toLowerCase().includes(keyword) || 
+                student.dharma.toLowerCase().includes(keyword) ||
+                student.club.toLowerCase().includes(keyword) ||
+                student.belt.toLowerCase().includes(keyword)
+            );
+            renderTable(filtered, true); // Chạy lại bảng từ đầu với dữ liệu đã lọc
+        });
         document.getElementById('searchInput').addEventListener('keyup', function(e) {
             const keyword = e.target.value.toLowerCase();
             const filtered = allStudentsData.filter(student => 
